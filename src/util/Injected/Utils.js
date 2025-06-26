@@ -302,6 +302,9 @@ exports.LoadUtils = () => {
         }
 
         await window.Store.SendMessage.addAndSendMsgToChat(chat, message);
+        await window.Store.HistorySync.sendPeerDataOperationRequest(3, {
+            chatId: chat.id
+        });
 
         const waitForMsg = async (msgId, attempts = 10, delay = 100) => {
             for (let i = 0; i < attempts; i++) {
