@@ -11,13 +11,70 @@ exports.LoadUtils = () => {
 
     window.WWebJS.sendSeen = async (chatId) => {
         const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-        if (chat) {
-            window.Store.WAWebStreamModel.Stream.markAvailable();
-            await window.Store.SendSeen.sendSeen(chat);
-            window.Store.WAWebStreamModel.Stream.markUnavailable();
-            return true;
+        if (!chat) {
+            console.warn('sendSeen: Could not get chat for chatId:', chatId);
+            return false;
         }
-        return false;
+
+        if (window.Store.WAWebStreamModel?.Stream) {
+            window.Store.WAWebStreamModel.Stream.markAvailable();
+        }
+
+        let sendSeenSuccess = false;
+
+        try {
+            if (chat.markedUnread === undefined) {
+                chat.markedUnread = false;
+            }
+
+            if (chat.unreadCount === undefined) {
+                chat.unreadCount = 0;
+            }
+
+            if (typeof chat.sendSeen === 'function') {
+                await chat.sendSeen();
+                sendSeenSuccess = true;
+            }  else if (typeof chat.markAsRead === 'function') {
+                await chat.markAsRead();
+                sendSeenSuccess = true;
+            } else if (typeof chat.markUnread === 'function') {
+                await chat.markUnread(false);
+                sendSeenSuccess = true;
+            } else if (typeof chat.set === 'function') {
+                chat.set({ unreadCount: 0 });
+                sendSeenSuccess = true;
+            } else if (window.Store.SendSeen?.sendSeen) {
+                // Criar uma cópia segura do objeto de chat, garantindo que tenha as propriedades necessárias
+                const safeChat = {
+                    ...chat,
+                    markedUnread: chat.markedUnread || false,
+                    unreadCount: chat.unreadCount || 0
+                };
+
+                await window.Store.SendSeen.sendSeen(safeChat);
+                sendSeenSuccess = true;
+            }
+        } catch (error) {
+            console.warn('sendSeen failed:', error);
+
+            if (chat.id) {
+                try {
+                    const storeChat = window.Store.Chat.get(chat.id);
+                    if (storeChat && typeof storeChat.set === 'function') {
+                        storeChat.set({ unreadCount: 0 });
+                        sendSeenSuccess = true;
+                    }
+                } catch (fallbackError) {
+                    console.warn('Final fallback failed:', fallbackError);
+                }
+            }
+        }
+
+        if (window.Store.WAWebStreamModel?.Stream) {
+            window.Store.WAWebStreamModel.Stream.markUnavailable();
+        }
+
+        return sendSeenSuccess;
     };
 
     window.WWebJS.sendMessage = async (chat, content, options = {}) => {
