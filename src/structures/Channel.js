@@ -41,7 +41,8 @@ class Channel extends Base {
          * The channel description
          * @type {string}
          */
-        this.description = data.channelMetadata.description;
+        this.description =
+            data.channelMetadata?.description ?? data.description ?? '';
 
         /**
          * Indicates if it is a Channel
@@ -352,7 +353,7 @@ class Channel extends Base {
                     while (msgs.length < searchOptions.limit) {
                         const loadedMessages = await window
                             .require('WAWebChatLoadMessages')
-                            .loadEarlierMsgs(channel);
+                            .loadEarlierMsgs({ chat: channel });
                         if (!loadedMessages || !loadedMessages.length) break;
                         msgs = [...loadedMessages.filter(msgFilter), ...msgs];
                     }
