@@ -103,7 +103,7 @@ class Message extends Base {
          * @type {string}
          */
         this.deviceType =
-            typeof data.id.id === 'string' && data.id.id.length > 21
+            typeof data.id.id === 'string' && data.id.id.length > 25
                 ? 'android'
                 : typeof data.id.id === 'string' &&
                     data.id.id.substring(0, 2) === '3A'
@@ -403,7 +403,10 @@ class Message extends Base {
     async getMentions() {
         return await Promise.all(
             this.mentionedIds.map(
-                async (m) => await this.client.getContactById(m),
+                async (m) =>
+                    await this.client.getContactById(
+                        typeof m === 'string' ? m : m._serialized,
+                    ),
             ),
         );
     }
@@ -474,25 +477,7 @@ class Message extends Base {
      * @return {Promise}
      */
     async react(reaction) {
-        await this.client.pupPage.evaluate(
-            async (messageId, reaction) => {
-                if (!messageId) return null;
-                const msg =
-                    window.require('WAWebCollections').Msg.get(messageId) ||
-                    (
-                        await window
-                            .require('WAWebCollections')
-                            .Msg.getMessagesById([messageId])
-                    )?.messages?.[0];
-                if (!msg) return null;
-                await window.require('WAWebSendReactionMsgAction')(
-                    msg,
-                    reaction,
-                );
-            },
-            this.id._serialized,
-            reaction,
-        );
+        return this.client.sendReaction(this.id._serialized, reaction);
     }
 
     /**
@@ -819,6 +804,7 @@ class Message extends Base {
         }
         return undefined;
     }
+
     /**
      * Gets the payment details associated with a given message
      * @return {Promise<Payment>}
@@ -896,7 +882,7 @@ class Message extends Base {
                 )
             ) {
                 console.warn(
-                    'Mentions with an array of Contact are now deprecated. See more at https://github.com/pedroslopez/whatsapp-web.js/pull/2166.',
+                    'Mentions with an array of Contact are now deprecated. See more at https://github.com/wwebjs/whatsapp-web.js/pull/2166.',
                 );
                 options.mentions = options.mentions.map(
                     (a) => a.id._serialized,
@@ -1004,6 +990,7 @@ class Message extends Base {
 
         return edittedEventMsg && new Message(this.client, edittedEventMsg);
     }
+
     /**
      * Returns the PollVote this poll message
      * @returns {Promise<PollVote[]>}
