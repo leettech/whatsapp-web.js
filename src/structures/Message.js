@@ -77,7 +77,7 @@ class Message extends Base {
          */
         this.from =
             typeof data.from === 'object' && data.from !== null
-                ? (data.from._serialized || data.from.$1)
+                ? data.from._serialized || data.from.$1
                 : data.from;
 
         /**
@@ -89,7 +89,7 @@ class Message extends Base {
          */
         this.to =
             typeof data.to === 'object' && data.to !== null
-                ? (data.to._serialized || data.to.$1)
+                ? data.to._serialized || data.to.$1
                 : data.to;
 
         /**
@@ -98,7 +98,7 @@ class Message extends Base {
          */
         this.author =
             typeof data.author === 'object' && data.author !== null
-                ? (data.author._serialized || data.author.$1)
+                ? data.author._serialized || data.author.$1
                 : data.author;
 
         /**
@@ -214,12 +214,12 @@ class Message extends Base {
                       fromId:
                           typeof data.from === 'object' &&
                           (data.from._serialized || data.from.$1)
-                              ? (data.from._serialized || data.from.$1)
+                              ? data.from._serialized || data.from.$1
                               : data.from,
                       toId:
                           typeof data.to === 'object' &&
                           (data.to._serialized || data.to.$1)
-                              ? (data.to._serialized || data.to.$1)
+                              ? data.to._serialized || data.to.$1
                               : data.to,
                   }
                 : undefined;

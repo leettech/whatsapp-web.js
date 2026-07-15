@@ -170,7 +170,11 @@ class GroupChat extends Chat {
                         isInviteV4Sent: false,
                     };
 
-                    if (groupParticipants.some((p) => (p._serialized || p.$1) === pId)) {
+                    if (
+                        groupParticipants.some(
+                            (p) => (p._serialized || p.$1) === pId,
+                        )
+                    ) {
                         participantData[pId].code = 409;
                         participantData[pId].message = errorCodes[409];
                         continue;
