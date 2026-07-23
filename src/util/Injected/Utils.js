@@ -869,12 +869,29 @@ exports.LoadUtils = () => {
                 chat = null;
             }
         } else {
+            // #201834: WhatsApp keys Chat/FindChat by the phone-number wid.
+            // For @lid ids, findOrCreateLatestChat's toUserLidOrThrow fails
+            // ("No LID for user") and the usync fallback below would feed the
+            // lid number in as a phone number. Resolve lid -> PN first, reusing
+            // the same accessor as getContactLidAndPhone/enforceLidAndPnRetrieval.
+            let lookupWid = chatWid;
+            if (chatWid.server === 'lid') {
+                try {
+                    const pnWid = window
+                        .require('WAWebApiContact')
+                        .getPhoneNumber(chatWid);
+                    if (pnWid) lookupWid = pnWid;
+                } catch (ignoredError) {
+                    // keep the lid wid as-is; lookups below may still resolve it
+                }
+            }
+
             chat =
-                window.require('WAWebCollections').Chat.get(chatWid) ||
+                window.require('WAWebCollections').Chat.get(lookupWid) ||
                 (
                     await window
                         .require('WAWebFindChatAction')
-                        .findOrCreateLatestChat(chatWid)
+                        .findOrCreateLatestChat(lookupWid)
                 )?.chat;
         }
 
